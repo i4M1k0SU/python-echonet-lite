@@ -10,7 +10,7 @@ logger = getLogger(__name__)
 
 class PropertyManager:
     # キャッシュ対象のEPC
-    cacheEPCs = (0x82, 0x8a, 0x8d, 0x9d, 0x9e, 0x9f, 0xe7, 0xe8)
+    cacheEPCs = (0x82, 0x8a, 0x8d, 0x9d, 0x9e, 0x9f, 0xe1, 0xe7, 0xe8, 0xea, 0xeb)
     # サポートするEPC
     supportEPCs = [0x80, 0x81, 0x82, 0x88, 0x8a, 0x8d, 0x97, 0x98, 0x9d, 0x9e, 0x9f,
                    0xd3, 0xd7, 0xe0, 0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe7, 0xe8, 0xea, 0xeb, 0xec, 0xed]
@@ -20,7 +20,7 @@ class PropertyManager:
     infESVs = [0x73, 0x74]
 
     def __init__(self):
-        self._cache = {}
+        self.cacheClear()
         self._requests = {}
 
     def setWisunManager(self, wisun):
@@ -81,9 +81,9 @@ class PropertyManager:
         props = {}
         for p in frame.properties:
             props[p.EPC] = p
-            # if p.EPC in PropertyManager.cacheEPCs:
-            #     self._cache[p.EPC] = p
-            self._cache[p.EPC] = p
+            if p.EPC in PropertyManager.cacheEPCs:
+                self._cache[p.EPC] = p
+            # self._cache[p.EPC] = p
         logger.info(
             "PropertyManager.put cache-keys:{0}".format(self._cache.keys()))
         # 要求IDから要求フレーム
@@ -104,6 +104,10 @@ class PropertyManager:
                 self._ether.sendResponse(res_frame, key)
         elif frame.ESV in PropertyManager.infESVs:
             self._ether.sendNotification(frame)
+
+    # キャッシュクリア
+    def cacheClear(self):
+        self._cache = {}
 
     # def recordData(self, properties):
     #     text = ''

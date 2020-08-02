@@ -80,6 +80,11 @@ class WisunManager(WisunManager):
                 self.sendPause(False)
                 if not self._connected:
                     queue.put(line)
+            elif line.startswith(b'EVENT 26'):
+                self.sendPause(True)
+                if not self._connected:
+                    queue.put(line)
+                self.requestReconnect(True)
             else:
                 if not self._connected:
                     queue.put(line)

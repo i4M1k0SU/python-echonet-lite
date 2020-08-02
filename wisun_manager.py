@@ -42,6 +42,7 @@ class WisunManager(metaclass=ABCMeta):
             self._queueSend = None
             self._propMan = None
             self._sendPause = False
+            self._reqReconnect = False
 
     # シリアル送信
     def _serialSendLine(self, str):
@@ -125,6 +126,9 @@ class WisunManager(metaclass=ABCMeta):
 
     # 送信タスク開始
     def startSendTask(self):
+        if self._propMan is not None:
+            self._propMan.cacheClear()
+        self.requestReconnect(False)
         self._queueSend = SetQueue()
         self._sndThread = Thread(target=self._sndTask, args=(self._queueSend,))
         self._stopSendEvent = Event()
@@ -160,6 +164,14 @@ class WisunManager(metaclass=ABCMeta):
             logger.info('Wi-SUN送信停止')
         else:
             logger.info('Wi-SUN送信再開')
+
+    # 再接続要求
+    def requestReconnect(self, detect):
+        self._reqReconnect = detect
+
+    # 再接続要求の有無チェック
+    def detectRequestReconnect(self):
+        return self._reqReconnect
 
     # Wi-SUN経由Echonet送信
     @abstractmethod

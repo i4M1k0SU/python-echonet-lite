@@ -72,6 +72,14 @@ def main():
     vm = vmi
     pre_state = connect_state
     while True:
+        if wm.detectRequestReconnect():
+            wm.requestReconnect(False)
+            # スマートメータ再接続
+            logger.info("start reconnect")
+            if wm is not None:
+                wm.disconnect()
+                connect_state = ConnectState.DISCONNECT
+                startConnect()
         if bd.isPressed(SW4):
             state = vm.get_display_state()
             vm.set_display_state(not state)
