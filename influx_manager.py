@@ -3,11 +3,11 @@ import datetime
 import time
 import subprocess
 import struct
+from os import path
 from configparser import ConfigParser, NoOptionError, NoSectionError
 from influxdb import InfluxDBClient
 from logging import getLogger, StreamHandler, INFO, Formatter
 logger = getLogger(__name__)
-
 
 class InfluxManager:
     def __init__(self):
@@ -15,7 +15,7 @@ class InfluxManager:
         self._k = 0.1
         # config読み込み
         iniFile = ConfigParser()
-        iniFile.read('/home/pi/wisun-gateway/config.ini')
+        iniFile.read(path.abspath('./config.ini'))
         try:
             url = iniFile.get('influxdb', 'url')
             self._client = InfluxDBClient(
@@ -47,7 +47,7 @@ class InfluxManager:
                     values[6] * 0.1, timestamp)
         d = datetime.datetime.today()
         f = open(
-            '/home/pi/wisun-gateway/power{0:04d}{1:02d}{2:02d}.txt'.format(d.year, d.month, d.day), 'a')
+            path.abspath('./power{0:04d}{1:02d}{2:02d}.txt').format(d.year, d.month, d.day), 'a')
         f.write(text)
         f.close()
         if self._client is not None:

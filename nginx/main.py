@@ -6,7 +6,7 @@ import glob
 
 # 初期化
 app = Flask(__name__)
-INI_FILE = '/home/pi/wisun-gateway/config.ini'
+INI_FILE = os.path.abspath('../config.ini')
 
 # ルートアクセス時の処理
 @app.route('/')

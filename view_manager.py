@@ -20,7 +20,7 @@ class ViewManager(metaclass=ABCMeta):
     def __init__(self, iniFile):
         self._state = True
         self._device = self.get_device(
-            ['--config', iniFile.get('view', 'config_file')])
+            ['--config', os.path.abspath(iniFile.get('view', 'config_file'))])
         self._width = min(self._device.width, 240)
         self._height = min(self._device.height, 240)
         self._font = self.make_font(iniFile.get(
@@ -175,7 +175,7 @@ class ViewManagerAnalog(ViewManager):
 
 if __name__ == "__main__":
     iniFile = ConfigParser()
-    iniFile.read('/home/pi/wisun-gateway/config.ini')
+    iniFile.read(os.path.abspath('./config.ini'))
     vm = ViewManagerAnalog(iniFile)
     try:
         while True:

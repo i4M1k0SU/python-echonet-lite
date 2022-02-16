@@ -27,7 +27,7 @@ logger.setLevel(INFO)
 
 # config
 iniFile = ConfigParser()
-iniFile.read('/home/pi/wisun-gateway/config.ini')
+iniFile.read(os.path.abspath('./config.ini'))
 
 # Wi-SUNマネージャ
 wm = WisunManagerFactory.createInstance()

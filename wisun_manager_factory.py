@@ -3,6 +3,7 @@ from configparser import ConfigParser
 import bp35c0
 import bp35c0_j11
 import logging
+from os import path
 logger = logging.getLogger(__name__)
 
 class WisunManagerFactory:
@@ -11,7 +12,7 @@ class WisunManagerFactory:
     def createInstance():
         # config読み込み
         iniFile = ConfigParser()
-        iniFile.read('/home/pi/wisun-gateway/config.ini')
+        iniFile.read(path.abspath('./config.ini'))
         pwd = iniFile.get('smartmeter', 'pwd')
         bid = iniFile.get('smartmeter', 'bid')
         dev = iniFile.get('smartmeter', 'serial_port')
