@@ -1,0 +1,10 @@
+pillow
+luma.core
+luma.oled
+netifaces
+gpiozero
+bitstring
+numpy
+flask
+influxdb
+uwsgi

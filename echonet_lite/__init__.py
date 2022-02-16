@@ -241,7 +241,7 @@ class Node:
             except Exception:
                 if sock is not None:
                     sock.close()
-                logger.warn('retry bind')
+                logger.warning('retry bind')
                 time.sleep(1.0)
 
     def sendto(self, data, addr):
@@ -270,14 +270,14 @@ class Node:
         except socket.timeout:
             return False
         except Exception as e:
-            logger.warn('ignore packet: {0}'.format(e))
+            logger.warning('ignore packet: {0}'.format(e))
             return False
 
     def loop(self, debug=False):
         # sock = self._bind_socket()
         print("wait...")
         while True:
-            recvfrom(debug)
+            self.recvfrom(debug)
 
 
 def print_frame(frame):
