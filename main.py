@@ -1,5 +1,4 @@
 # coding: utf-8
-from echonet_lite import Node
 from wisun_manager_factory import WisunManagerFactory
 from ethernet_manager import EthernetManager
 from property_manager import PropertyManager
@@ -7,7 +6,7 @@ from logging import getLogger, StreamHandler, INFO, Formatter, DEBUG
 import time
 from btn_drv import ButtonDriver, POWER, SW2, SW3, SW4
 from view_manager_power import ViewManagerPower
-from view_manager import ViewManagerAnalog
+# from view_manager import ViewManagerAnalog
 from view_manager_info import ViewManagerInfo
 from enum import Enum
 import os
@@ -28,6 +27,8 @@ logger.setLevel(INFO)
 # config
 iniFile = ConfigParser()
 iniFile.read(os.path.abspath('./config.ini'))
+fontInfo = int(iniFile.get('view', 'font_info'))
+fontSmall = int(iniFile.get('view', 'font_small'))
 
 # Wi-SUNマネージャ
 wm = WisunManagerFactory.createInstance()
@@ -44,18 +45,19 @@ vmp.setPropertyManager(pm)
 
 
 class ConnectState(Enum):
-    DISCONNECT = 0
+    DISCONNECTED = 0
     CONNECTING = 1
     CONNECTED = 2
     CONNECT_ERROR = 3
     DEVICE_ERROR = 4
+    DISCONNECTING = 5
 
 
 thread = None
 if wm is None:
     connect_state = ConnectState.DEVICE_ERROR
 else:
-    connect_state = ConnectState.DISCONNECT
+    connect_state = ConnectState.DISCONNECTED
 
 
 def main():
@@ -76,23 +78,22 @@ def main():
             state = vm.get_display_state()
             vm.set_display_state(not state)
         if connect_state == ConnectState.CONNECTED:
-            if bd.isPressed(SW3):
-                # スマートメータ切断
-                if wm is not None:
-                    wm.disconnect()
-                    connect_state = ConnectState.DISCONNECT
-        elif connect_state == ConnectState.DISCONNECT:
-            vmi.setInfo('未接続', int(iniFile.get('view', 'font_info')))
+            if bd.isPressed(SW3) and thread is None:
+                stopConnect()
+        elif connect_state == ConnectState.DISCONNECTED:
+            vmi.setInfo('未接続', fontInfo)
             if bd.isPressed(SW2) and thread is None:
                 startConnect()
+        elif connect_state == ConnectState.DISCONNECTING:
+            vmi.setInfo('切断中', fontInfo)
         elif connect_state == ConnectState.CONNECTING:
-            vmi.setInfo('接続中', int(iniFile.get('view', 'font_info')))
+            vmi.setInfo('接続中', fontInfo)
         elif connect_state == ConnectState.CONNECT_ERROR:
-            vmi.setInfo('接続失敗', int(iniFile.get('view', 'font_info')))
+            vmi.setInfo('接続失敗', fontInfo)
             if bd.isPressed(SW2) and thread is None:
                 startConnect()
         elif connect_state == ConnectState.DEVICE_ERROR:
-            vmi.setInfo('無線モジュール異常', int(iniFile.get('view', 'font_small')))
+            vmi.setInfo('無線モジュール異常', fontSmall)
         if connect_state == ConnectState.CONNECTED:
             vm = vmp
         else:
@@ -103,8 +104,8 @@ def main():
         pre_state = connect_state
 
         if bd.isLongPressed(POWER):
-            logger.info("pressed")
-            vmi.setInfo('シャットダウン中', int(iniFile.get('view', 'font_small')))
+            logger.info('pressed')
+            vmi.setInfo('シャットダウン中', fontSmall)
             vm = vmi
             vm.clearPayload()
             vm.reflesh()
@@ -112,13 +113,11 @@ def main():
             bd.enablePowerButton()
             dispose()
             # シャットダウンコマンド
-            os.system("sudo shutdown -h now")
+            os.system('sudo shutdown -h now')
             return
         time.sleep(0.1)
 
 # Wi-SUN接続タスク起動
-
-
 def startConnect():
     if wm is None:
         return
@@ -129,8 +128,6 @@ def startConnect():
     thread.start()
 
 # Wi-SUN接続タスク
-
-
 def connect_task():
     global thread
     global connect_state
@@ -145,6 +142,26 @@ def connect_task():
         connect_state = ConnectState.CONNECT_ERROR
     thread = None
 
+# Wi-SUN切断タスク起動
+def stopConnect():
+    if wm is None:
+        return
+    global thread
+    global connect_state
+    connect_state = ConnectState.DISCONNECTING
+    thread = Thread(target=disconnect_task)
+    thread.start()
+
+# Wi-SUN切断タスク
+def disconnect_task():
+    global thread
+    global connect_state
+    # スマートメータ切断
+    logger.info('切断開始')
+    wm.disconnect()
+    logger.info('切断成功')
+    connect_state = ConnectState.DISCONNECTED
+    thread = None
 
 def dispose():
     # EthernetベースのEchonet処理終了
